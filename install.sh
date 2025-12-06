@@ -28,19 +28,21 @@ sudo apt install -y python3 python3-dev python3-pip python3-gi python3-gi-cairo 
 echo "[3/5] Setting up pipx..."
 pipx ensurepath 2>/dev/null || true
 
-# Install py3_sg (wdpass) - inject into a dedicated environment
+# Install wdpass
 echo "[4/5] Installing wdpass utility..."
-if pipx list 2>/dev/null | grep -q "py3.sg"; then
+if pipx list 2>/dev/null | grep -q "wdpass"; then
     echo "wdpass already installed, upgrading..."
-    pipx upgrade py3-sg 2>/dev/null || pipx install py3-sg --force
+    pipx upgrade wdpass 2>/dev/null || pipx install wdpass --force
 else
-    # Install in a way that exposes the wdpass command
-    pipx install py3-sg --include-deps
+    pipx install wdpass
 fi
 
 # Make the GUI script executable
 echo "[5/5] Setting up WD Unlocker GUI..."
-chmod +x wd_unlocker_gui.py
+
+# Get the directory where install.sh is located (works even if run from different directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+chmod +x "$SCRIPT_DIR/wd_unlocker_gui.py"
 
 # Create desktop entry
 DESKTOP_FILE="$HOME/.local/share/applications/wd-unlocker.desktop"
@@ -50,7 +52,7 @@ cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Name=WD Disk Unlocker
 Comment=Unlock Western Digital Hard Disks
-Exec=$(pwd)/wd_unlocker_gui.py
+Exec=$SCRIPT_DIR/wd_unlocker_gui.py
 Icon=drive-harddisk
 Terminal=false
 Type=Application
