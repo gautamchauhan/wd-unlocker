@@ -54,7 +54,7 @@ sudo apt install pipx
 pipx ensurepath
 
 # Install wdpass
-pipx install py3_sg
+pipx install wdpass
 
 # Make GUI executable
 chmod +x wd_unlocker_gui.py
@@ -85,7 +85,7 @@ After installation, search for "WD Disk Unlocker" in your applications menu.
 If you prefer using the command line:
 
 ```bash
-sudo pipx run wdpass -u
+sudo wdpass -u
 ```
 
 ## Troubleshooting

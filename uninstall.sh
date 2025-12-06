@@ -17,7 +17,7 @@ fi
 read -p "Do you want to remove wdpass utility? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    pipx uninstall py3-sg 2>/dev/null || echo "py3-sg not found in pipx"
+    pipx uninstall wdpass 2>/dev/null || echo "wdpass not found in pipx"
     echo "wdpass removed."
 fi
 

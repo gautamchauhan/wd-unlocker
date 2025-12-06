@@ -49,7 +49,7 @@ Enhancement suggestions are welcome! Please:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/wd-unlocker.git
+   git clone https://github.com/gautam-chauhan/wd-unlocker.git
    cd wd-unlocker
    ```
 
