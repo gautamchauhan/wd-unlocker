@@ -14,13 +14,37 @@ import threading
 SUPPORTED_MODEL_PREFIXES = ('My Passport',)
 
 
+def _has_readable_partition_table(block_name):
+    """Return True if the kernel could read a partition table on this disk.
+
+    A locked WD My Passport's data side is gated by firmware: reads of
+    sector 0 fail, so the kernel never enumerates partitions and
+    /sys/block/sdX has no sdXN subdirs. Once the disk is unlocked the
+    kernel partition scan succeeds and the subdirs appear.
+
+    Note: a hypothetical unlocked WD disk with no partition table at all
+    would misdetect as locked. That is exotic for consumer My Passport
+    units (which ship with a partition) and the user can still proceed
+    via the Unlock button if it happens.
+    """
+    block_dir = os.path.join('/sys/block', block_name)
+    try:
+        for entry in os.listdir(block_dir):
+            if entry.startswith(block_name) and entry[len(block_name):].isdigit():
+                return True
+    except OSError:
+        pass
+    return False
+
+
 def detect_wd_passport():
     """Find a connected WD My Passport via sysfs and report its lock state.
 
-    A locked My Passport exposes its SCSI device with size=0 (the data side
-    is gated behind the firmware password); once unlocked the same device
-    reports its real sector count. That lets us detect lock state without
-    running anything privileged.
+    The firmware advertises the device's full sector count via SCSI INQUIRY
+    even when locked, so size alone is not a reliable signal. Instead we
+    check whether the kernel can read a partition table on the disk — when
+    locked it cannot, so /sys/block/sdX has no partition subdirs and
+    /proc/partitions omits the device.
 
     Returns a dict {device, model, size_sectors, status} for the first match,
     or None if no supported WD device is connected.
@@ -59,7 +83,7 @@ def detect_wd_passport():
             'device': f'/dev/{name}',
             'model': model,
             'size_sectors': size_sectors,
-            'status': 'unlocked' if size_sectors > 0 else 'locked',
+            'status': 'unlocked' if _has_readable_partition_table(name) else 'locked',
         })
 
     if not candidates:
