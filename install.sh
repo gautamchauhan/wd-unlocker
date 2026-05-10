@@ -31,8 +31,18 @@ pipx ensurepath 2>/dev/null || true
 # Install wdpass
 echo "[4/5] Installing wdpass utility..."
 if pipx list 2>/dev/null | grep -q "wdpass"; then
-    echo "wdpass already installed, upgrading..."
-    pipx upgrade wdpass 2>/dev/null || pipx install wdpass --force
+    # After an OS major upgrade (e.g. Ubuntu 25.10 → 26.04), the pipx venv's
+    # Python symlink can point to an interpreter that no longer exists. Detect
+    # that and rebuild the venv instead of trying to upgrade in place.
+    PIPX_HOME_DIR="${PIPX_HOME:-$HOME/.local/share/pipx}"
+    WDPASS_VENV_PY="$PIPX_HOME_DIR/venvs/wdpass/bin/python"
+    if [ ! -x "$WDPASS_VENV_PY" ] || ! "$WDPASS_VENV_PY" --version &>/dev/null; then
+        echo "wdpass venv has a broken Python interpreter, reinstalling..."
+        pipx reinstall wdpass || pipx install wdpass --force
+    else
+        echo "wdpass already installed, upgrading..."
+        pipx upgrade wdpass 2>/dev/null || pipx install wdpass --force
+    fi
 else
     pipx install wdpass
 fi
