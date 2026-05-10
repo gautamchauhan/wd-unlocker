@@ -3,6 +3,8 @@
 WD Unlocker - GUI application for unlocking Western Digital hard disks on Linux
 """
 
+__version__ = "0.2.0"
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
