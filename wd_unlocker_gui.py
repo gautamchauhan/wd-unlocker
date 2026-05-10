@@ -5,7 +5,7 @@ WD Unlocker - GUI application for unlocking Western Digital hard disks on Linux
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib
 import subprocess
 import threading
 
@@ -233,22 +233,6 @@ exit ${{PIPESTATUS[1]}}
         self.password_entry.set_sensitive(True)
 
 def main():
-    # Apply CSS for better appearance
-    css_provider = Gtk.CssProvider()
-    css = b"""
-    window {
-        background-color: #f5f5f5;
-    }
-    """
-    css_provider.load_from_data(css)
-    screen = Gdk.Screen.get_default()
-    style_context = Gtk.StyleContext()
-    style_context.add_provider_for_screen(
-        screen,
-        css_provider,
-        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-    
     win = WDUnlockerWindow()
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
