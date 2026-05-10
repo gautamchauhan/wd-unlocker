@@ -153,9 +153,6 @@ class WDUnlockerWindow(Gtk.Window):
         self.show_password_check.connect("toggled", self.on_show_password_toggled)
         self.password_box.pack_start(self.show_password_check, False, False, 0)
 
-        # no_show_all so the window-level show_all() in main() can't override
-        # the visibility we set in refresh_state().
-        self.password_box.set_no_show_all(True)
         vbox.pack_start(self.password_box, False, False, 0)
 
         # Transient operation status (success / error / info).
@@ -176,7 +173,6 @@ class WDUnlockerWindow(Gtk.Window):
         self.unlock_button.connect("clicked", self.on_unlock_clicked)
         self.unlock_button.set_can_default(True)
         self.unlock_button.get_style_context().add_class("suggested-action")
-        self.unlock_button.set_no_show_all(True)
         button_box.pack_start(self.unlock_button, False, False, 0)
 
         refresh_button = Gtk.Button(label="Refresh")
@@ -192,8 +188,7 @@ class WDUnlockerWindow(Gtk.Window):
         vbox.pack_start(button_box, False, False, 0)
 
         self.unlock_button.grab_default()
-
-        self.refresh_state()
+        # refresh_state runs from main() after show_all so hide() calls stick
 
     def refresh_state(self, clear_status=True):
         """Re-detect the WD disk and adjust the info text + form visibility."""
@@ -379,6 +374,7 @@ def main():
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
     win.spinner.stop()
+    win.refresh_state()
     Gtk.main()
 
 
