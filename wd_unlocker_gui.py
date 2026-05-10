@@ -31,6 +31,7 @@ def detect_wd_passport():
     except OSError:
         return None
 
+    candidates = []
     for name in names:
         if not name.startswith('sd'):
             continue
@@ -54,13 +55,21 @@ def detect_wd_passport():
         if not any(model.startswith(p) for p in SUPPORTED_MODEL_PREFIXES):
             continue
 
-        return {
+        candidates.append({
             'device': f'/dev/{name}',
             'model': model,
             'size_sectors': size_sectors,
             'status': 'unlocked' if size_sectors > 0 else 'locked',
-        }
-    return None
+        })
+
+    if not candidates:
+        return None
+    # If more than one supported drive is present (e.g. one locked, one
+    # unlocked), prefer the locked one so the user sees the actionable state.
+    for c in candidates:
+        if c['status'] == 'locked':
+            return c
+    return candidates[0]
 
 
 def format_size(size_sectors):
@@ -285,8 +294,11 @@ exit ${{PIPESTATUS[1]}}
 
                 if process.returncode == 0 or "unlocked" in full_output.lower():
                     GLib.idle_add(self.show_status, "✓ Device unlocked successfully!", "success")
-                    # Give the kernel a moment to expose the new size before re-detecting.
-                    GLib.timeout_add(1500, self._refresh_after_unlock)
+                    # Hide the form immediately so a stale-password retry can't fire
+                    # during the window before sysfs reflects the new device size.
+                    GLib.idle_add(self._hide_unlock_form)
+                    # USB re-enumeration can take a few seconds on slower hosts.
+                    GLib.timeout_add(3000, self._refresh_after_unlock)
                 elif "cancelled" in full_output.lower() or "dismissed" in full_output.lower():
                     GLib.idle_add(self.show_status, "✗ Authentication cancelled", "error")
                 elif "incorrect" in full_output.lower() or "wrong" in full_output.lower():
@@ -313,6 +325,10 @@ exit ${{PIPESTATUS[1]}}
             GLib.idle_add(self.show_status, f"✗ Error: {str(e)[:80]}", "error")
         finally:
             GLib.idle_add(self.reset_ui)
+
+    def _hide_unlock_form(self):
+        self.password_box.hide()
+        self.unlock_button.hide()
 
     def _refresh_after_unlock(self):
         self.refresh_state(clear_status=False)
